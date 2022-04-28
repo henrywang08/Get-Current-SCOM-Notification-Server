@@ -1,0 +1,16 @@
+$NotifObj = Get-SCOMClass -displayname "Alert Notification subscription Server" | get-scomclassinstance
+
+$HSClass = Get-SCOMClass -DisplayName "Health Service"
+$MSServers = Get-SCOMManagementServer 
+
+$MSHSObjs = Get-SCOMClassInstance -Class $HSClass | ? {$MSServers.Displyanme -contains $_.DisplayName}
+
+$Task = Get-SCOMTask -Target $HSClass | ? DisplayName -eq "Show Running Rules and Monitors for this Health Service"
+
+$TaskResults = Start-SCOMTask -Instance $MSHSObjs -Task $Task
+
+$NotifMSResult = Get-SCOMTaskResult -BatchID $TaskResults.BatchID | ? Output -match $NotifObj.id
+
+$NotifMS = Get-SCOMClassInstance -id $NotifMSResult.TargetObjectId
+
+Write-Host "The current $($NotifObj.displayname) is $($NotifMS.DisplayName)
